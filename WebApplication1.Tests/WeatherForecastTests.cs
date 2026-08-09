@@ -54,7 +54,7 @@ namespace WebApplication1.Tests
 
       var result = service.GetAlert(forecast);
 
-      Assert.Equal("No alerts", result);
+      Assert.Equal("No alerts.", result);
     }
 
     [Theory]
