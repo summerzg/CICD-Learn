@@ -46,5 +46,33 @@ jobs:
             --results-directory ./coverage \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
+      - name: Print Quality Gate status
+        if: always()
+        run: |
+          PROJECT_KEY="${{ vars.SONAR_PROJECT_KEY }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          
+          RESPONSE=$(curl -sS -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${PROJECT_KEY}&pullRequest=${PR_NUMBER}")
+          
+          STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status // "UNKNOWN"')
+          
+          if [ "$STATUS" != "OK" ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ Quality Gate Failed - Details:"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            
+            echo "$RESPONSE" | jq -r '
+              .projectStatus.conditions[]? | 
+              select(.status != "OK") | 
+              "❌ \(.metricKey):\n   Status: \(.status)\n   Actual: \(.actualValue // "N/A")\n   Required: \(.errorThreshold)\n"
+            '
+            
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "View full report: https://sonarcloud.io/dashboard?id=${PROJECT_KEY}&pullRequest=${PR_NUMBER}"
+          else
+            echo "✅ Quality Gate Passed"
+          fi
+
       - name: End SonarCloud scan
         run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
