@@ -1,6 +1,6 @@
 namespace WebApplication1
 {
-  // Intentionally untested to demonstrate coverage gate failure
+  // Intentionally untested to demonstrate coverage gate failure.
   public class WeatherAlertService
   {
     public string GetAlert(WeatherForecast forecast)
